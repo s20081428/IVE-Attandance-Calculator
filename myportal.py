@@ -1,8 +1,8 @@
 from bs4 import BeautifulSoup
 import requests
 import datetime as dt
-import time
 from requests import session
+import getpass
 
 
 historys = []
@@ -13,11 +13,11 @@ headers = {
     'Cookie' : '',
     'User-Agent' : 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.116 Safari/537.36'
 }
-def login():
+def login(username, password):
     post_data = {
         'ajaxLogin': 'true',
-        'userid': '150151714',
-        'password': 'y5981393!@Y'
+        'userid': username,
+        'password': password
     }
 
     with session() as c:
@@ -78,39 +78,55 @@ def check_attend(SubjectCode):
     wb_data.content
     soup2 = BeautifulSoup(wb_data2.text, 'lxml')
 
-    dates = soup2.select('tbody > tr > td:nth-of-type(1) ')
-    statuss = soup2.select('tbody > tr > td:nth-of-type(2) ')
-    arrive_times = soup2.select('tbody > tr > td:nth-of-type(3) ')
-    class_times = soup2.select('tbody > tr > td:nth-of-type(4) ')
-    class_rooms = soup2.select('tbody > tr > td:nth-of-type(5) ')
+    isWrongCrouse = soup2.select('table.hkvtcsp_wording')
+    if len(isWrongCrouse)>0:
+        dates = soup2.select('tbody > tr > td:nth-of-type(1) ')
+        statuss = soup2.select('tbody > tr > td:nth-of-type(2) ')
+        arrive_times = soup2.select('tbody > tr > td:nth-of-type(3) ')
+        class_times = soup2.select('tbody > tr > td:nth-of-type(4) ')
+        class_rooms = soup2.select('tbody > tr > td:nth-of-type(5) ')
+        subjectTitle = soup2.select('.hkvtcsp_textInput > option[selected="selected"]')[0].text
 
+        for date, status, arrive_time, class_time, class_room in zip(dates,statuss,arrive_times,class_times,class_rooms):
+            history1 = {
+                'date': date.get_text(),
+                'status': status.get_text(),
+                'arrive_time': arrive_time.get_text(),
+                'class_time': class_time.get_text(),
+                'class_rooms': class_room.get_text(),
+                'late_time': calLateTime(arrive_time.get_text(),class_time.get_text(),status.get_text())
+            }
+            historys.append(history1)
+        cal_main(SubjectCode, subjectTitle)
+    else:
+        pass
 
-
-    for date, status, arrive_time, class_time, class_room in zip(dates,statuss,arrive_times,class_times,class_rooms):
-        history1 = {
-            'date': date.get_text(),
-            'status': status.get_text(),
-            'arrive_time': arrive_time.get_text(),
-            'class_time': class_time.get_text(),
-            'class_rooms': class_room.get_text(),
-            'late_time': calLateTime(arrive_time.get_text(),class_time.get_text(),status.get_text())
-        }
-        historys.append(history1)
-    cal_main(SubjectCode)
-
-def cal_main (SubjectCode):
+def cal_main (SubjectCode, subjectTitle):
     totalLate = 0
     global historys
     for history in historys:
         if history['late_time']!="":
             totalLate+= int(history['late_time'])
 
-    print('-----------------------------------------------------------------------------------------------')
-    hours = input('Enter the total hour of course (' + SubjectCode  + ') : ')
+    total_study_hours = {
+        'ITP4506': 52,
+        'ITP4507': 52,
+        'ITP4511': 52,
+        'ITE4103': 26,
+        'LAN3003': 26,
+        'LAN4108': 26,
+        'ITP4913M': 106
+    }
+
+    print('*********************************************************************************************')
+    print('Course name: ' + subjectTitle)
+    if SubjectCode in total_study_hours:
+        hours = total_study_hours[SubjectCode]
+    else:
+        hours = input('Enter the total hour of course (' + SubjectCode  + ') : ')
     print("Total left hours: " + str(round(float(totalLate)/60,2)))
     print("Total left percentage " + str(round((((float(totalLate)/60)/float(hours))*100),2)) + "%")
-    print("You have " + str(round(float(hours)*0.3 - float(totalLate/60),2)) + " hours to leave. ^^")
-    print('-----------------------------------------------------------------------------------------------')
+    print("You have " + str(round(float(hours)*0.3 - float(totalLate/60),2)) + " hours to leave.")
     historys = []
 
 def getSubjectcode():
@@ -125,12 +141,29 @@ def getSubjectcode():
     courses.pop(0) #delete the first empty option
 
 def start():
-    login()
-    getSubjectcode()
-    for course in courses:
-        check_attend(course)
+    ask_Login()
+    try:
+        getSubjectcode()
+    except IndexError:
+        print('1. You entered a wrong username/password. or\n2. Your account is locked.')
+        return
+    ask_Input()
 
+def ask_Login():
+    username = input("Username: ")
+    password = getpass.getpass("Password: ")
+    login(username,password)
 
-
+def ask_Input():
+    check_type = input("1. Check all course /  2. Check assigned course [1,2]")
+    if check_type == "1":
+        for course in courses:
+            check_attend(course)
+    elif check_type == "2":
+        course_code = input("Enter course code" + str(courses))
+        check_attend(course_code)
+    else:
+        print('Enter a voild input please!')
+        ask_Input()
 
 start();
