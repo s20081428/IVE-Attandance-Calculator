@@ -1,12 +1,19 @@
 import datetime as dt
 import getpass
-
+import smtplib
 import requests
 from bs4 import BeautifulSoup
 from requests import session
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.utils import parseaddr, formataddr
+from email.header import Header
+from email import encoders
 
+text = ''
 historys = []
 courses = []
+username =''
 url = 'https://myportal.vtc.edu.hk/wps/myportal/!ut/p/a1/hY_NCoJAGACfpYPH9lv_yroJlQSSiYW5F_laN13bVslNfPzwAaLjwMAwwOAGTOMoazSy06hmZqvSPm72tpvQOLo6Bxra8S5I_cClJwoFFGz9S4gSHzJgwFoccSKDeI9KGCI1V59KkB5NU0r96KCwaDv0Fs3OCfUci3KFwxAaI3SFmgsyNealIP_XYt1WehdP5DVPIUc-T0D_xPsyDxdfp1LYiQ!!/'
 
 headers = {
@@ -136,6 +143,9 @@ def cal_main(SubjectCode, subjectTitle):
     print("Total left hours: " + str(round(float(totalLate) / 60, 2)))
     print("Total left percentage " + str(round((((float(totalLate) / 60) / float(hours)) * 100), 2)) + "%")
     print("You have " + str(round(float(hours) * 0.3 - float(totalLate / 60), 2)) + " hours to leave.")
+    global text
+    text += '*********************************************************************************************' + "\n"+ 'Course name: ' + subjectTitle + "\n"+ "Total left hours: " + str(round(float(totalLate) / 60, 2)) + "\n"+ "Total left percentage " + str(round((((float(totalLate) / 60) / float(hours)) * 100), 2)) + "%" + "\n"+ "You have " + str(round(float(hours) * 0.3 - float(totalLate / 60), 2)) + " hours to leave." + "\n"
+
     historys = []
 
 
@@ -159,11 +169,13 @@ def start():
         print('1. You entered a wrong username/password. or\n2. Your account is locked.')
         return
     ask_Input()
+    sendmail()
 
 
 def ask_Login():
+    global username
     username = input("Username: ")
-    password = getpass.getpass("Password: ")
+    password = input("Password: ")
     login(username, password)
 
 
@@ -178,6 +190,27 @@ def ask_Input():
     else:
         print('Enter a voild input please!')
         ask_Input()
+
+
+def sendmail():
+    sender = 'iveattendancechecker@gmail.com'
+    receiver = username + '@stu.vtc.edu.hk'
+    subject = 'Course Attendance'
+
+    print(receiver)
+    email_text = MIMEMultipart('alternative')
+    email_text['Subject'] = subject
+    email_text['From'] = sender
+    email_text['To'] = receiver
+
+    body = MIMEText(text, 'plain')
+
+    email_text.attach(body)
+    server = smtplib.SMTP('smtp.gmail.com', 587)
+    server.starttls()
+    server.login(sender, 'iveattendancecheckerpw')
+    server.sendmail('iveattendancechecker@gmail.com', receiver, email_text.as_string())
+    server.quit()
 
 
 start();
