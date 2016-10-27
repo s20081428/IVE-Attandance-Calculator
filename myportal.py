@@ -170,12 +170,12 @@ def start():
         return
     ask_Input()
     sendmail()
-
+    input("Press enter to quit.......")
 
 def ask_Login():
     global username
     username = input("Username: ")
-    password = input("Password: ")
+    password = getpass.getpass("Password: ")
     login(username, password)
 
 
