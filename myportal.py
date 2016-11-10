@@ -205,12 +205,6 @@ updater = Updater(token='299024440:AAEu8EyJgO5c17Osw7Da0nmoZB84h5VUt_A')
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',level=logging.INFO)
 updater.dispatcher.add_handler(CommandHandler('start', start))
 updater.dispatcher.add_handler(MessageHandler(Filters.text, process))
-
-custom_keyboard = [['top-left', 'top-right'],
-                  ['bottom-left', 'bottom-right']]
-reply_markup = telegram.ReplyKeyboardMarkup(custom_keyboard)
-
-
 updater.start_polling()
 updater.idle()
 
