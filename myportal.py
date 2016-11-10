@@ -1,13 +1,15 @@
 import datetime as dt
+import logging
+import time
+
 import requests
 import telegram
 from bs4 import BeautifulSoup
+from emoji import emojize
 from requests import session
 from telegram.ext import MessageHandler, Updater, CommandHandler, Filters
 from telegram.ext.dispatcher import run_async
-from emoji import emojize
-import logging
-import time
+
 
 class Action:
     text = ''
@@ -94,8 +96,8 @@ class Action:
         wb_data.content
         soup2 = BeautifulSoup(wb_data2.text, 'lxml')
 
-        isWrongCrouse = soup2.select('table.hkvtcsp_wording')
-        if len(isWrongCrouse) > 0:
+        isWrongCourse = soup2.select('table.hkvtcsp_wording')
+        if len(isWrongCourse) > 0:
             dates = soup2.select('tbody > tr > td:nth-of-type(1) ')
             statuss = soup2.select('tbody > tr > td:nth-of-type(2) ')
             arrive_times = soup2.select('tbody > tr > td:nth-of-type(3) ')
@@ -119,12 +121,11 @@ class Action:
         else:
             pass
 
-    def cal_main(self,SubjectCode, subjectTitle):
+    def cal_main(self, SubjectCode, subjectTitle):
         totalLate = 0
         for history in self.historys:
             if history['late_time'] != "":
                 totalLate += int(history['late_time'])
-
 
         total_study_hours = {
             'ITP4506': 52,
@@ -141,12 +142,9 @@ class Action:
             hours = input('Enter the total hour of course (' + SubjectCode + ') : ')
 
         self.bot.sendMessage(chat_id=self.update.message.chat_id, text='課程名稱： <b>' + subjectTitle
-                                  + "</b>\n你已缺席了： <b>" + str(round(float(totalLate) / 60, 2)) + " 小時</b>"
-                                  + "\n已缺席百分比： <b>" + str(round((((float(totalLate) / 60) / float(hours)) * 100), 2)) + "%</b>"
-                                  + "\n你還可缺席： <b>" + str(round(float(hours) * 0.3 - float(totalLate / 60), 2)) + " 小時</b>",
-                                  parse_mode=telegram.ParseMode.HTML)
-
-
+                                                                       + "</b>\n你已缺席了： <b>" + str(round(float(totalLate) / 60, 2)) + " 小時</b>"
+                                                                       + "\n已缺席百分比： <b>" + str(round((((float(totalLate) / 60) / float(hours)) * 100), 2)) + "%</b>"
+                                                                       + "\n你還可缺席： <b>" + str(round(float(hours) * 0.3 - float(totalLate / 60), 2)) + " 小時</b>", parse_mode=telegram.ParseMode.HTML)
 
     def getSubjectcode(self):
         wb_data = requests.get(self.url, headers=self.headers)
@@ -179,12 +177,13 @@ class Action:
             self.check_attend(course)
         return True
 
+
 def start(bot, update):
     update.message.reply_text('請按照格式輸入MyPortal的帳戶密碼\nInput Format: username,password')
 
+
 @run_async
 def process(bot, update):
-
     user_input = update.message.text.split(",")
 
     if (len(user_input) == 2):
@@ -198,13 +197,13 @@ def process(bot, update):
         return
 
     newAction = Action(username, password, update, bot)
-    if(newAction.process()==True):
+    if (newAction.process() == True):
         update.message.reply_text("查詢完畢，歡迎再次使用！" + emojize(":blush:", use_aliases=True))
 
+
 updater = Updater(token='299024440:AAEu8EyJgO5c17Osw7Da0nmoZB84h5VUt_A')
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',level=logging.INFO)
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 updater.dispatcher.add_handler(CommandHandler('start', start))
 updater.dispatcher.add_handler(MessageHandler(Filters.text, process))
 updater.start_polling()
 updater.idle()
-
