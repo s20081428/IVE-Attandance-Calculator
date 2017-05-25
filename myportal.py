@@ -128,23 +128,21 @@ class Action:
                 totalLate += int(history['late_time'])
 
         total_study_hours = {
-            'ITP4506': 52,
-            'ITP4507': 52,
-            'ITP4511': 52,
-            'ITE4103': 26,
-            'LAN3003': 26,
-            'LAN4108': 26,
-            'ITP4913M': 106
+            'ITP4509': 52,
+            'ITP4512': 52,
+            'ITE3902': 26,
+            'LAN4003': 26,
+            'LAN4101': 39,
+            'SDD4002': 14
         }
         if SubjectCode in total_study_hours:
             hours = total_study_hours[SubjectCode]
-        else:
-            hours = input('Enter the total hour of course (' + SubjectCode + ') : ')
+            self.bot.sendMessage(chat_id=self.update.message.chat_id, text='課程名稱： <b>' + subjectTitle
+                                     + "</b>\n你已缺席了： <b>" + str(round(float(totalLate) / 60, 2)) + " 小時</b>"
+                                     + "\n已缺席百分比： <b>" + str(round((((float(totalLate) / 60) / float(hours)) * 100), 2)) + "%</b>"
+                                     + "\n你還可缺席： <b>" + str(round(float(hours) * 0.3 - float(totalLate / 60), 2)) + " 小時</b>", parse_mode=telegram.ParseMode.HTML)
+            
 
-        self.bot.sendMessage(chat_id=self.update.message.chat_id, text='課程名稱： <b>' + subjectTitle
-                                                                       + "</b>\n你已缺席了： <b>" + str(round(float(totalLate) / 60, 2)) + " 小時</b>"
-                                                                       + "\n已缺席百分比： <b>" + str(round((((float(totalLate) / 60) / float(hours)) * 100), 2)) + "%</b>"
-                                                                       + "\n你還可缺席： <b>" + str(round(float(hours) * 0.3 - float(totalLate / 60), 2)) + " 小時</b>", parse_mode=telegram.ParseMode.HTML)
 
     def getSubjectcode(self):
         wb_data = requests.get(self.url, headers=self.headers)
@@ -201,7 +199,7 @@ def process(bot, update):
         update.message.reply_text("查詢完畢，歡迎再次使用！" + emojize(":blush:", use_aliases=True))
 
 
-updater = Updater(token='299024440:AAEu8EyJgO5c17Osw7Da0nmoZB84h5VUt_A')
+updater = Updater(token=‘<Enter the Telegram API token>’)
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 updater.dispatcher.add_handler(CommandHandler('start', start))
 updater.dispatcher.add_handler(MessageHandler(Filters.text, process))
