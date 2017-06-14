@@ -1,2 +1,7 @@
-# IVE-Attendance-Calculator
-Calculate the attendance more details for all student
+# IVE Attendance Calculator
+IVE Attendance Calculator is a script for all IVE students used to calculate the attendance percentage including how may hours you can ditch the lesson. The plugin has also integrated with telegram, you can simply replace your API token and modify the course code and hours that you want to calculate.
+
+# License
+See the LICENSE file for license rights and limitations (MIT).
+
+
